@@ -1,52 +1,74 @@
 {
   "riset": {
-    "ringkasan": "3 gamis silk kondangan (komisi ekstra 12%) & mukena travel mini viral siap dipromosikan.",
+    "ringkasan": "Radar midnight flash sale: 4 gamis crinkle airflow (komisi 15%) & 2 mukena parasut travel siap gaspol.",
     "menunggu": [
-      "Pilih 1 dari 2 supplier mukena travel mini untuk difokuskan di Shopee Video"
+      "Persetujuan sampel 2 brand mukena premium (estimasi komisi 18%)",
+      "Pilih 1 gamis unggulan untuk promo Shopee Video besok pagi"
     ],
     "mendesak": [
-      "Flash sale gamis sage green berakhir pukul 21.00 nanti malam"
+      "Flash sale midnight gamis crinkle berakhir pukul 02:00 nanti!",
+      "Stok hijab pashmina ceruty supplier utama sisa 12 pcs"
     ],
     "angka": [
       {
         "label": "Produk terkurasi",
-        "nilai": "14 item"
+        "nilai": "18 item"
       },
       {
         "label": "Komisi tertinggi",
-        "nilai": "15%"
+        "nilai": "18%"
+      },
+      {
+        "label": "Potensi konversi",
+        "nilai": "+24%"
       }
     ]
   },
   "admin": {
-    "ringkasan": "Etalase Shopee Koleksiku dirapikan (24 link aktif), 82 klik affiliate tercatat hari ini.",
+    "ringkasan": "Link etalase diperbarui dengan voucher diskon 25rb; 114 klik affiliate & 28 checkout pesanan hari ini.",
     "menunggu": [
-      "Konfirmasi nomor urut etalase untuk 3 gamis baru"
+      "Konfirmasi etalase kategori: 'Gamis Kondangan' vs 'Daily OOTD'",
+      "Cek link affiliate promo gajian yang mau kedaluwarsa"
+    ],
+    "mendesak": [
+      "Update kupon cashback toko sebelum kuota midnight habis"
     ],
     "angka": [
       {
         "label": "Klik link",
-        "nilai": "82 klik"
+        "nilai": "114 klik"
       },
       {
-        "label": "Checkout produk",
-        "nilai": "19 pesanan"
+        "label": "Checkout pesanan",
+        "nilai": "28 pesanan"
+      },
+      {
+        "label": "Link aktif",
+        "nilai": "32 link"
       }
     ]
   },
   "konten": {
-    "ringkasan": "3 skrip racun Shopee Video selesai: 'Mukena Seukuran Dompet' dan 'Gamis Mewah di Bawah 150rb'.",
+    "ringkasan": "Skrip racun video baru siap: 'Gamis Mewah Anti Gerah <150rb' dan 'Mukena Mini Muat Tas Kecil' siap take.",
     "menunggu": [
-      "Tinjau skrip Shopee Video no. 03 (Tutorial 3 Style Hijab Segiempat Paris)"
+      "ACC hook video: 'Beli gamis 100 ribuan tapi vibes-nya kayak jutaan?'",
+      "Pilih opsi thumbnail untuk Shopee Video no. 04"
+    ],
+    "mendesak": [
+      "Jadwal upload video racun OOTD subuh (05:30) harus siap malam ini"
     ],
     "angka": [
       {
         "label": "Naskah video",
-        "nilai": "3 skrip"
+        "nilai": "5 skrip"
       },
       {
         "label": "Caption racun",
-        "nilai": "5 variasi"
+        "nilai": "8 variasi"
+      },
+      {
+        "label": "Opsi hook",
+        "nilai": "6 sudut pandang"
       }
     ]
   }

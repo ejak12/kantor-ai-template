@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   AmbientLight,
   CircleGeometry,
@@ -14,13 +14,19 @@ import {
   type BufferGeometry,
   OrthographicCamera,
   PointLight,
+  Raycaster,
   Scene,
+  Vector2,
   Vector3,
   WebGLRenderer,
+  CylinderGeometry,
+  ConeGeometry,
 } from 'three';
 import { RUANGAN } from './config';
 import { buatKitGaya } from './gaya';
 import type { Dunia, Peran } from './gaya/alat';
+import { buatKarakter2DSprite, textureCache2D, type PoseKarakter } from './karakter2d';
+import type { Sprite } from 'three';
 
 type AgentKey = string;
 import { idleAt, type DeskState, type IdleSpot } from './office';
@@ -46,6 +52,8 @@ export interface SceneProps {
   onFail?: () => void;
   /** Id gaya 3D (src/gaya). Ganti = scene dibangun ulang. */
   gaya?: string;
+  onSelectAgent?: (desk: DeskState) => void;
+  presetAngle?: number | null;
 }
 
 const shade = (hex: string, f: number) => {
@@ -78,14 +86,24 @@ interface Actor {
   label: Vector3;
   phase: number;
   index: number;
+  sprite2D: Sprite;
 }
 
 const smooth = (x: number) => x * x * (3 - 2 * x);
 
-export default function OfficeScene({ desks, night, boardCount, anchors, boardAnchor, cinematic, manual, drive, onReady, onFail, gaya }: SceneProps) {
+export default function OfficeScene({ desks, night, boardCount, anchors, boardAnchor, cinematic, manual, drive, onReady, onFail, gaya, onSelectAgent, presetAngle }: SceneProps) {
   const host = useRef<HTMLDivElement>(null);
   const live = useRef({ desks, night, boardCount, dirty: true });
   live.current = { desks, night, boardCount, dirty: true };
+  // Camera angle ref — harus di body component, BUKAN di dalam useEffect
+  const cameraAngleRef = useRef<number>(presetAngle != null ? presetAngle : Math.PI / 4);
+
+  // Sync ref saat presetAngle berubah dari luar
+  useEffect(() => {
+    if (presetAngle != null) {
+      cameraAngleRef.current = presetAngle;
+    }
+  }, [presetAngle]);
 
   useEffect(() => {
     const el = host.current;
@@ -103,11 +121,14 @@ export default function OfficeScene({ desks, night, boardCount, anchors, boardAn
     renderer.domElement.setAttribute('aria-hidden', 'true');
 
     const scene = new Scene();
+  scene.background = new Color(0xffffff);
     const K = buatKitGaya(gaya);
     if (cinematic && K.kabut) scene.fog = new Fog(K.kabut[0], 30, 48);
     const kantor = new Group();
     scene.add(kantor);
     const camera = new OrthographicCamera(-10, 10, 6, -6, 0.1, 100);
+  camera.position.set(0, 5, 10);
+  camera.lookAt(0, 0, 0);
     const target = new Vector3(-0.3, 1.2, -0.3);
 
     const C = K.cahaya;
@@ -233,10 +254,19 @@ export default function OfficeScene({ desks, night, boardCount, anchors, boardAn
     const naik = dunia.tinggi ?? 0;
     kantor.position.y = naik;
     target.y += naik;
+        // ---------- central world tree (axis mundi) ----------
+        const worldTree = new Group();
+        const trunk = new Mesh(new CylinderGeometry(0.3, 0.3, 2, 12), mat('#8b5a2b', 'batang'));
+        const foliage = new Mesh(new ConeGeometry(1, 2, 8), mat('#2e8b57', 'daun'));
+        foliage.position.y = 2.5;
+        worldTree.add(trunk);
+        worldTree.add(foliage);
+        worldTree.position.set(0, naik, 0);
+        kantor.add(worldTree);
     // ---------- outside: lawn, trees, a stone path (full screen) ----------
     if (cinematic && !dunia.gantiLuar) {
       const L = K.luar;
-      const grassMat = mat('#8cc672', 'tanah');
+      const grassMat = mat('#6b8e23', 'tanah');
       grassM = grassMat;
       if (L.bentuk === 'bulat') add(cyl(L.ukuran / 2, L.ukuran / 2 + 0.3, 0.3, grassMat), 0, -0.8, -1);
       else box(L.ukuran, 0.2, L.ukuran, grassMat, 0, -0.75, L.ukuran < 40 ? -2 : 0);
@@ -327,8 +357,10 @@ export default function OfficeScene({ desks, night, boardCount, anchors, boardAn
       const armR = limb(0.07, 0.34, shirt, 0.29, 1.12);
       const legL = limb(0.085, 0.38, pants, -0.11, 0.62);
       const legR = limb(0.085, 0.38, pants, 0.11, 0.62);
+      const sprite2D = buatKarakter2DSprite(d.desk.key);
+      root.add(sprite2D);
       kantor.add(root);
-      return { key: d.desk.key, root, body, head, armL, armR, legL, legR, screen, deskTop, book, lamp, light, seat, label: new Vector3(), phase: i * 1.7, index: i };
+      return { key: d.desk.key, root, body, head, armL, armR, legL, legR, screen, deskTop, book, lamp, light, seat, label: new Vector3(), phase: i * 1.7, index: i, sprite2D };
     });
 
     // ---------- camera ----------
@@ -361,43 +393,135 @@ export default function OfficeScene({ desks, night, boardCount, anchors, boardAn
     const ro = new ResizeObserver(fit);
     ro.observe(el);
     const reduce = !manual && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    // The director (cinematic): a wide shot, then close-ups that glide from agent to agent, every SHOT seconds.
-    const SHOT = 3.2;
     const home = target.clone();
-    const shotAim = (i: number, out: Vector3): number => {
-      if (i < 0 || i % 3 === 0 || !actors.length) {
-        out.copy(home);
-        return 1.02 * (dunia.zoomJauh ?? 1);
-      }
-      const shown = actors.filter((x) => x.root.visible);
-      const pick = (shown.length ? shown : actors)[(i * 2 + Math.floor(i / 3)) % (shown.length || actors.length)]!;
-      out.set(pick.root.position.x, 1.1 + naik, pick.root.position.z);
-      return portrait ? 1.7 : 1.6;
-    };
-    const aimA = new Vector3();
-    const aimB = new Vector3();
-    const look = new Vector3();
-    const placeCamera = (t: number) => {
-      const swing = reduce ? 0 : cinematic ? (portrait ? 0.14 : 0.32) * Math.sin(t * 0.21) : 0.03 * Math.sin(t * 0.15);
-      const a = (portrait ? 1.15 : Math.PI / 4) + swing;
-      let zoom = 1;
-      look.copy(home);
-      if (cinematic && !reduce) {
-        const i = Math.floor(t / SHOT);
-        const zA = shotAim(i - 1, aimA);
-        const zB = shotAim(i, aimB);
-        const f = Math.min(1, (t - i * SHOT) / 1.1);
-        const e = f * f * (3 - 2 * f);
-        look.copy(aimA).lerp(aimB, e);
-        zoom = (zA + (zB - zA) * e) * (1 + 0.03 * Math.sin(t * 0.5));
-      }
-      camera.position.set(look.x + 17 * Math.sin(a), look.y + 13.5, look.z + 17 * Math.cos(a));
-      camera.lookAt(look);
-      if (camera.zoom !== zoom) {
-        camera.zoom = zoom;
+    const pan = new Vector3(0, 0, 0);
+    let zoomLevel = 1.0;
+    // cameraAngleRef sudah dideklarasikan di body component (di atas useEffect ini)
+
+
+    const placeCamera = (_t: number) => {
+      // Selalu pakai ref; preset angle hanya untuk inisialisasi (disync di useEffect atas)
+      const activeA = cameraAngleRef.current;
+      const lookX = home.x + pan.x;
+      const lookY = home.y;
+      const lookZ = home.z + pan.z;
+
+      const dist = 17;
+      camera.position.set(
+        lookX + dist * Math.sin(activeA),
+        lookY + 13.5,
+        lookZ + dist * Math.cos(activeA)
+      );
+      camera.lookAt(lookX, lookY, lookZ);
+
+      if (camera.zoom !== zoomLevel) {
+        camera.zoom = zoomLevel;
         camera.updateProjectionMatrix();
       }
     };
+
+    // Interaksi kursor: geser layar (pan), putar angle (orbit), zoom, dan klik karakter
+    let isDragging = false;
+    let dragMode: 'pan' | 'orbit' = 'pan';
+    let lastX = 0;
+    let lastY = 0;
+    let startX = 0;
+    let startY = 0;
+
+    const raycaster = new Raycaster();
+    const mousePos = new Vector2();
+
+    const onPointerDown = (e: PointerEvent) => {
+      isDragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      startX = e.clientX;
+      startY = e.clientY;
+      dragMode = e.button === 2 || e.shiftKey ? 'orbit' : 'pan';
+      // Saat mulai orbit, sync ref dari presetAngle supaya drag tidak lompat
+      if (dragMode === 'orbit' && presetAngle != null) {
+        cameraAngleRef.current = presetAngle;
+      }
+      el.style.cursor = 'grabbing';
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (isDragging) {
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+
+        if (dragMode === 'orbit') {
+          // Adjust persistent camera angle stored in ref
+          cameraAngleRef.current += dx * 0.007;
+        } else {
+          const halfH = (camera.top - camera.bottom) / 2;
+          const panScale = ((halfH * 2) / (el.clientHeight || 1)) / zoomLevel;
+          const activeA = cameraAngleRef.current;
+          const cosA = Math.cos(activeA);
+          const sinA = Math.sin(activeA);
+
+          pan.x -= (dx * cosA - dy * sinA * 0.7) * panScale;
+          pan.z -= (-dx * sinA - dy * cosA * 0.7) * panScale;
+        }
+
+        live.current.dirty = true;
+      } else {
+        const rect = el.getBoundingClientRect();
+        mousePos.set(
+          ((e.clientX - rect.left) / rect.width) * 2 - 1,
+          -((e.clientY - rect.top) / rect.height) * 2 + 1
+        );
+        raycaster.setFromCamera(mousePos, camera);
+        const sprites = actors.map((a) => a.sprite2D);
+        const hits = raycaster.intersectObjects(sprites, false);
+        el.style.cursor = hits.length > 0 ? 'pointer' : 'grab';
+      }
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      isDragging = false;
+      el.style.cursor = 'grab';
+      const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
+      if (dist < 6) {
+        const rect = el.getBoundingClientRect();
+        mousePos.set(
+          ((e.clientX - rect.left) / rect.width) * 2 - 1,
+          -((e.clientY - rect.top) / rect.height) * 2 + 1
+        );
+        raycaster.setFromCamera(mousePos, camera);
+        for (const a of actors) {
+          const hits = raycaster.intersectObjects([a.sprite2D, a.deskTop], false);
+          if (hits.length > 0) {
+            const d = live.current.desks.find((x) => x.desk.key === a.key);
+            if (d) {
+              onSelectAgent?.(d);
+              return;
+            }
+          }
+        }
+      }
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+      zoomLevel = Math.max(0.4, Math.min(3.5, zoomLevel * zoomFactor));
+      live.current.dirty = true;
+    };
+
+    const onContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    el.style.touchAction = 'none';
+    el.style.cursor = 'grab';
+    el.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('contextmenu', onContextMenu);
 
     const proj = new Vector3();
     const place = (node: HTMLElement | null | undefined, at: Vector3) => {
@@ -502,6 +626,35 @@ export default function OfficeScene({ desks, night, boardCount, anchors, boardAn
         else a.root.rotation.set(0, 0, 0);
         a.root.position.y = spot === 'sofa' && k === 1 ? -0.05 : 0;
         a.label.set(pos.x, (standing && !sitting ? 1.95 : (cinematic ? 1.75 : 2.1)) + hk * 2, pos.z);
+
+        // Mode 2D aktif: sembunyikan kapsul 3D lama, tampilkan sprite 2D chibi/anime
+        a.body.visible = false;
+        a.head.visible = false;
+        a.armL.visible = false;
+        a.armR.visible = false;
+        a.legL.visible = false;
+        a.legR.visible = false;
+        a.sprite2D.visible = !away;
+
+        if (a.sprite2D.visible) {
+          const blink = (t + a.phase) % 4.0 < 0.18;
+          let pose: PoseKarakter = 'duduk_santai';
+          if (sitting) {
+            pose = busy ? 'duduk_kerja' : 'duduk_santai';
+            const bob = busy ? 0.015 * Math.abs(Math.sin(t * 14 + a.phase)) : 0.008 * Math.sin(t * 2 + a.phase);
+            a.sprite2D.position.set(0, 0.42 + bob, 0);
+          } else {
+            pose = walking ? 'jalan' : 'berdiri';
+            const bob = walking ? 0.04 * Math.abs(Math.sin(t * 9 + a.phase)) : 0;
+            a.sprite2D.position.set(0, 0.52 + bob, 0);
+          }
+          const tex = textureCache2D.getTexture(a.key, pose, blink);
+          if (a.sprite2D.material.map !== tex) {
+            a.sprite2D.material.map = tex;
+            a.sprite2D.material.needsUpdate = true;
+          }
+        }
+
         if (reduce) continue;
         const s = Math.sin(t * 9 + a.phase);
         if (!sitting) {
@@ -595,6 +748,11 @@ export default function OfficeScene({ desks, night, boardCount, anchors, boardAn
       io.disconnect();
       ro.disconnect();
       document.removeEventListener('visibilitychange', onVis);
+      el.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('contextmenu', onContextMenu);
       for (const d of disposables) d.dispose();
       K.dispose();
       renderer.dispose();

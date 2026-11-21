@@ -3,8 +3,9 @@ import { flushSync } from 'react-dom';
 import { GAYA, KANTOR, TAMPIL_PEMILIH_GAYA } from './config';
 import { DAFTAR_GAYA, KUNCI_SIMPAN, cariGaya, gayaAwal, type GayaId } from './gaya/daftar';
 import { IDLE_LABEL, idleAt, isNight, isoDay, lapseAt, missionBoard, officeDesks, params as readParams, type DeskState, type IdleSpot } from './office';
+import DashboardModal from './DashboardModal';
 
-const OfficeScene = lazy(() => import('./OfficeScene'));
+import OfficeScene from './OfficeScene';
 
 const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -15,6 +16,8 @@ export default function App() {
   const [now, setNow] = useState(() => new Date());
   const [t, setT] = useState(0);
   const [open, setOpen] = useState<DeskState | null>(null);
+  const [dashboardBuka, setDashboardBuka] = useState(() => new URLSearchParams(location.search).get('dashboard') === '1');
+  const [presetAngle, setPresetAngle] = useState<number | null>(Math.PI / 4);
   const drive = useRef<((t: number) => void) | null>(null);
   const anchors = useRef(new Map<string, HTMLElement>());
   const boardAnchor = useRef<HTMLElement | null>(null);
@@ -86,6 +89,8 @@ export default function App() {
             manual={p.rec}
             drive={drive}
             gaya={gaya}
+            onSelectAgent={(d) => setOpen(d)}
+            presetAngle={presetAngle}
           />
         </Suspense>
         {g.tiltShift && <div className="ko-tilt" aria-hidden="true" />}
@@ -107,6 +112,13 @@ export default function App() {
       </div>
 
       <header className="ko-hud">
+          {/* Camera angle controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '12px' }}>
+            <button type="button" onClick={() => setPresetAngle(null)} title="Free camera" style={{ padding: '4px 8px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '4px' }}>Free</button>
+            <button type="button" onClick={() => setPresetAngle(Math.PI/4)} title="Isometric" style={{ padding: '4px 8px', background: '#06b6d4', color: '#fff', border: 'none', borderRadius: '4px' }}>Iso</button>
+            <button type="button" onClick={() => setPresetAngle(0)} title="Front" style={{ padding: '4px 8px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '4px' }}>Front</button>
+            <button type="button" onClick={() => setPresetAngle(Math.PI)} title="Back" style={{ padding: '4px 8px', background: '#06b6d4', color: '#fff', border: 'none', borderRadius: '4px' }}>Back</button>
+          </div>
         <div className="ko-brand">
           <span className="ko-live" />
           <div>
@@ -116,11 +128,34 @@ export default function App() {
             </small>
           </div>
         </div>
-        <div className="ko-clock">
-          <b>{time.replace(':', '.')}</b>
-          <small>
-            {HARI[now.getDay()]}, {now.getDate()} {BULAN[now.getMonth()]} {now.getFullYear()}
-          </small>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            onClick={() => setDashboardBuka(true)}
+            title="Buka Project Progress & Signal Tracker Dashboard"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: '10px',
+              fontSize: '12px',
+              fontWeight: 700,
+              color: '#ffffff',
+              background: 'linear-gradient(135deg, #4f46e5, #06b6d4)',
+              boxShadow: '0 4px 14px rgba(79, 70, 229, 0.35)',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <span>📊 Dashboard Tracker</span>
+          </button>
+          <div className="ko-clock">
+            <b>{time.replace(':', '.')}</b>
+            <small>
+              {HARI[now.getDay()]}, {now.getDate()} {BULAN[now.getMonth()]} {now.getFullYear()}
+            </small>
+          </div>
         </div>
       </header>
 
@@ -130,8 +165,11 @@ export default function App() {
         </p>
       )}
 
-      <aside className="ko-mini">
-        <h2>Mission Board</h2>
+      <aside className="ko-mini" onClick={() => setDashboardBuka(true)} style={{ cursor: 'pointer' }} title="Klik untuk membuka Dashboard Tracker lengkap">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <h2 style={{ margin: 0 }}>Mission Board</h2>
+          <span style={{ fontSize: '11px', color: '#6366f1', fontWeight: 600 }}>Buka Tracker ↗</span>
+        </div>
         <ul>
           {board.items.slice(0, 3).map((it, i) => (
             <li key={i}>
@@ -171,6 +209,117 @@ export default function App() {
         </nav>
       )}
 
+      {/* Kontrol Kamera & Petunjuk Kursor */}
+      {!p.rec && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '16px',
+            left: '16px',
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+            backgroundColor: 'rgba(15, 23, 42, 0.85)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(51, 65, 85, 0.75)',
+            borderRadius: '16px',
+            padding: '10px 14px',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+            maxWidth: 'calc(100vw - 32px)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>
+              📐 Angle Kamera:
+            </span>
+            <button
+              type="button"
+              onClick={() => setPresetAngle(Math.PI / 4)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '8px',
+                border: '1px solid rgba(79, 70, 229, 0.4)',
+                backgroundColor: presetAngle === Math.PI / 4 ? '#4f46e5' : 'rgba(30, 41, 59, 0.6)',
+                color: '#ffffff',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Isometrik (45°)
+            </button>
+            <button
+              type="button"
+              onClick={() => setPresetAngle(0)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '8px',
+                border: '1px solid rgba(79, 70, 229, 0.4)',
+                backgroundColor: presetAngle === 0 ? '#4f46e5' : 'rgba(30, 41, 59, 0.6)',
+                color: '#ffffff',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Depan (0°)
+            </button>
+            <button
+              type="button"
+              onClick={() => setPresetAngle(Math.PI / 2)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '8px',
+                border: '1px solid rgba(79, 70, 229, 0.4)',
+                backgroundColor: presetAngle === Math.PI / 2 ? '#4f46e5' : 'rgba(30, 41, 59, 0.6)',
+                color: '#ffffff',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Sisi Kanan
+            </button>
+            <button
+              type="button"
+              onClick={() => setPresetAngle(-Math.PI / 4)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '8px',
+                border: '1px solid rgba(79, 70, 229, 0.4)',
+                backgroundColor: presetAngle === -Math.PI / 4 ? '#4f46e5' : 'rgba(30, 41, 59, 0.6)',
+                color: '#ffffff',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Sisi Kiri
+            </button>
+            <button
+              type="button"
+              onClick={() => setPresetAngle(Math.PI / 4 + Math.random() * 0.0001)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '8px',
+                border: '1px solid rgba(148, 163, 184, 0.3)',
+                backgroundColor: 'rgba(51, 65, 85, 0.5)',
+                color: '#cbd5e1',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              🎯 Reset
+            </button>
+          </div>
+          <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+            🖱️ <b>Drag:</b> Geser Layar · 🖱️ <b>Klik Kanan Drag:</b> Putar Sudut Bebas · 🔍 <b>Scroll:</b> Zoom · 👆 <b>Klik Karakter:</b> Buka Info
+          </div>
+        </div>
+      )}
+
       {open && (
         <div className="ko-sheet" role="dialog" aria-label={open.agen.nama} onClick={() => setOpen(null)}>
           <div className="ko-sheet-in" onClick={(e) => e.stopPropagation()}>
@@ -195,6 +344,8 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {dashboardBuka && <DashboardModal onClose={() => setDashboardBuka(false)} />}
     </div>
   );
 }

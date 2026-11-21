@@ -13,8 +13,7 @@ export const KANTOR = {
 };
 
 /**
- * Gaya 3D kantor (lihat README, "Ganti gaya 3D"): 'asli' | 'clay' | 'felt' | 'voxel' | 'vinyl' | 'diorama' | 'kayu' |
- * 'stickman' | 'pulau' | 'toko' | 'menara' | 'taman' | 'gedung30' | 'hologram' | 'angkringan' | 'pecellele' | 'bakso'. Bisa ditimpa lewat ?gaya=<id> atau pemilih di layar.
+ * Gaya 3D kantor (lihat README, "Ganti gaya 3D"): 'asli' | 'vinyl' | 'kayu' | 'stickman' | 'pulau' | 'toko' | 'menara' | 'taman' | 'gedung30' | 'hologram' | 'angkringan'. Bisa ditimpa lewat ?gaya=<id> atau pemilih di layar.
  */
 export const GAYA: GayaId = 'asli';
 /** Tombol pemilih gaya di pojok kanan bawah. false = sembunyikan (mis. untuk video final). */
@@ -57,6 +56,9 @@ export const JADWAL: { agen: string[] | '*'; mulai: string; menit: number; hari:
   { agen: ['konten'], mulai: '08:15', menit: 30, hari: [1, 2, 3, 4, 5], aktivitas: 'kerja', label: 'membuat skrip racun OOTD…' },
   { agen: '*', mulai: '15:42', menit: 25, hari: [1, 2, 3, 4, 5], aktivitas: 'laporan', label: 'menulis laporan harian…' },
   { agen: '*', mulai: '20:00', menit: 120, hari: [1, 2, 3, 4, 5, 6, 7], aktivitas: 'belajar', label: 'belajar tren mode malam…' },
+  { agen: ['riset'], mulai: '23:15', menit: 105, hari: [1, 2, 3, 4, 5, 6, 7], aktivitas: 'kerja', label: 'radar midnight flash sale gamis & mukena…' },
+  { agen: ['admin'], mulai: '23:15', menit: 105, hari: [1, 2, 3, 4, 5, 6, 7], aktivitas: 'kerja', label: 'sinkronisasi link voucher & etalase affiliate…' },
+  { agen: ['konten'], mulai: '23:15', menit: 105, hari: [1, 2, 3, 4, 5, 6, 7], aktivitas: 'kerja', label: 'produksi skrip racun OOTD & copywriting…' },
 ];
 
 /** Jam kantor: di luar jadwal, agen "siap menerima perintah" (atau ngopi, lihat papan, ngobrol). */

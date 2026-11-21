@@ -41,6 +41,7 @@ export function agentDoing(key: string, hari: number, time: string, selaluKerja 
     if (t >= s && t < s + j.menit) return { activity: j.aktivitas, label: j.label };
   }
   if (wd <= 5 && t >= toMin(JAM_KANTOR.buka) && t < toMin(JAM_KANTOR.tutup)) return { activity: 'siaga', label: 'siap menerima perintah' };
+  if (selaluKerja) return { activity: 'siaga', label: 'siaga mendampingi kamu (online)' };
   return { activity: 'pulang', label: wd > 5 ? 'libur akhir pekan' : 'di luar jam kerja' };
 }
 

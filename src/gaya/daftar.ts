@@ -9,40 +9,11 @@ export const DAFTAR_GAYA = [
     ket: 'Gaya bawaan: bentuk sederhana, warna hangat, paling ringan.',
   },
   {
-    id: 'clay',
-    nama: 'Clay',
-    jenis: 'menyeluruh',
-    ket: 'Plastisin: sudut membulat tebal, bekas jari, warna pastel.',
-    latar: { siang: 'radial-gradient(130% 90% at 50% 15%, #fff6ea 0%, #efe3cf 60%, #e2cdb2 100%)', malam: '' },
-  },
-  {
-    id: 'felt',
-    nama: 'Felt',
-    jenis: 'menyeluruh',
-    ket: 'Kain flanel/wol: serat halus, warna lembut, jahitan di tepi.',
-    latar: { siang: 'radial-gradient(130% 90% at 50% 15%, #f5ecdc 0%, #e7ddcc 60%, #d6c7ae 100%)', malam: '' },
-  },
-  {
-    id: 'voxel',
-    nama: 'Voxel',
-    jenis: 'menyeluruh',
-    ket: 'Semua objek jadi balok piksel ala gim kotak-kotak.',
-    latar: { siang: 'linear-gradient(#7fc6ff 0 40%, #a9dbff 40% 70%, #cfeeff 70%)', malam: 'linear-gradient(#060b24, #142250)' },
-  },
-  {
     id: 'vinyl',
     nama: 'Vinyl (chibi)',
     jenis: 'menyeluruh',
     ket: 'Mainan vinyl mengilap: kepala besar, sudut bulat, warna permen.',
     latar: { siang: 'linear-gradient(160deg, #ffd6e8, #d8e6ff 55%, #d6fff1)', malam: 'linear-gradient(160deg, #3a1a40, #141a3a 55%, #0e2a2a)' },
-  },
-  {
-    id: 'diorama',
-    nama: 'Diorama',
-    jenis: 'menyeluruh',
-    ket: 'Miniatur meja: kayu, kain, rumput asli, alas kayu, kabur tilt-shift.',
-    latar: { siang: 'radial-gradient(circle at 50% 40%, #5a4330, #1e140c 75%)', malam: 'radial-gradient(circle at 50% 40%, #2a2030, #0a0608 75%)' },
-    tiltShift: true,
   },
   {
     id: 'kayu',
@@ -62,7 +33,7 @@ export const DAFTAR_GAYA = [
     id: 'pulau',
     nama: 'Pulau melayang',
     jenis: 'paduan',
-    ket: 'Clay + kantor di atas pulau melayang, laut pastel, awan.',
+    ket: 'Kantor di atas pulau melayang, laut pastel, awan.',
     latar: { siang: 'linear-gradient(#bfe6ff, #ffe1ee)', malam: 'linear-gradient(#141a40, #3a2050)' },
   },
   {
@@ -91,7 +62,7 @@ export const DAFTAR_GAYA = [
     id: 'gedung30',
     nama: 'Gedung 30 lantai',
     jenis: 'paduan',
-    ket: 'Voxel + kantor di lantai 13 gedung 30 lantai, beberapa lantai dibuka (cutaway).',
+    ket: 'Kantor di lantai 13 gedung 30 lantai, beberapa lantai dibuka (cutaway).',
     latar: { siang: 'linear-gradient(#5b6fc8, #ffb47a)', malam: 'linear-gradient(#0a0f2a, #2a1a40)' },
   },
   {
@@ -109,21 +80,6 @@ export const DAFTAR_GAYA = [
     ket: 'Kaki lima malam: tikar lesehan, gerobak beratap terpal, tungku arang & ceret, untaian bohlam kuning, motor parkir.',
     latar: { siang: 'linear-gradient(#141a33, #2a2030)', malam: 'linear-gradient(#141a33, #2a2030)' },
     malam: true,
-  },
-  {
-    id: 'pecellele',
-    nama: 'Warung Tenda Pecel Lele',
-    jenis: 'paduan',
-    ket: 'Tenda terpal dengan spanduk lukis, meja panjang & bangku plastik, gerobak penggorengan, lampu neon, kabel semrawut.',
-    latar: { siang: 'linear-gradient(#1d2440, #3a2a40)', malam: 'linear-gradient(#1d2440, #3a2a40)' },
-    malam: true,
-  },
-  {
-    id: 'bakso',
-    nama: 'Gerobak Bakso & Es',
-    jenis: 'paduan',
-    ket: 'Siang di depan sekolah: gerobak bakso berkaca, gerobak es, payung pelangi, pohon peneduh, pagar sekolah, sepeda.',
-    latar: { siang: 'linear-gradient(#9fdcff, #fff1d0)', malam: 'linear-gradient(#0e1a2a, #2a2a40)' },
   },
 ] as const satisfies readonly InfoGaya[];
 

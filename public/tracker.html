@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Progress & Signal Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                            900: '#0f172a',
+                            950: '#090d16',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans antialiased min-h-screen selection:bg-indigo-500/30 selection:text-indigo-200">
+
+    <!-- Notifikasi Toast Melayang -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Navbar / Header -->
+    <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <a href="/" title="Kembali ke Kantor 3D" class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform">
+                    <i data-lucide="activity" class="w-5 h-5 text-white"></i>
+                </a>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold tracking-tight text-white leading-tight flex items-center gap-2">
+                        Project Progress & Signal Tracker
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono hidden sm:inline">Kantor AI</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">Workspace Monitoring & Eksekusi Harian</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <a href="/" class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all text-xs flex items-center gap-1.5">
+                    <i data-lucide="building-2" class="w-4 h-4 text-indigo-400"></i>
+                    <span class="hidden sm:inline">Kantor 3D</span>
+                </a>
+                <button onclick="resetDemoData()" title="Reset ke data awal" class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 transition-all text-xs flex items-center gap-1.5">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    <span class="hidden md:inline">Reset Demo</span>
+                </button>
+                <button onclick="exportToMarkdown()" class="px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-medium text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-indigo-600/20 transition-all">
+                    <i data-lucide="clipboard-copy" class="w-4 h-4"></i>
+                    <span>Export Markdown</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+
+        <!-- 1. Quick Stats Cards -->
+        <section aria-label="Ringkasan Statistik" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Card 1: Total Proyek Aktif -->
+            <div class="rounded-2xl bg-slate-900/70 border border-slate-800/80 p-5 flex items-start justify-between hover:border-slate-700/80 transition-colors">
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wider text-slate-400">Total Proyek Aktif</p>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="stat-active" class="text-3xl font-bold text-white">0</span>
+                        <span class="text-xs text-slate-400">task berjalan</span>
+                    </div>
+                    <p id="stat-total-sub" class="mt-1.5 text-xs text-slate-500">Dari total 0 item terdaftar</p>
+                </div>
+                <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <!-- Card 2: Task Selesai Hari Ini -->
+            <div class="rounded-2xl bg-slate-900/70 border border-slate-800/80 p-5 flex items-start justify-between hover:border-slate-700/80 transition-colors">
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wider text-slate-400">Task Selesai Hari Ini</p>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="stat-done" class="text-3xl font-bold text-emerald-400">0</span>
+                        <span id="stat-rate" class="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">0%</span>
+                    </div>
+                    <div class="mt-2.5 w-36 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div id="stat-progress-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                    <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <!-- Card 3: Status Otomasi & Signal -->
+            <div class="rounded-2xl bg-slate-900/70 border border-slate-800/80 p-5 flex items-start justify-between hover:border-slate-700/80 transition-colors">
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wider text-slate-400">Status Otomasi & Signal</p>
+                    <div class="mt-2 flex items-center gap-2.5">
+                        <span class="relative flex h-2.5 w-2.5">
+                            <span id="automation-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                            <span id="automation-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-400"></span>
+                        </span>
+                        <span id="automation-label" class="text-lg font-bold text-white">Online & Sinkron</span>
+                    </div>
+                    <button onclick="toggleAutomationStatus()" class="mt-2 text-xs text-cyan-400 hover:text-cyan-300 underline underline-offset-4 transition-colors">
+                        Ubah mode monitor
+                    </button>
+                </div>
+                <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+                    <i data-lucide="radio" class="w-5 h-5"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Workspace Grid: Task Board (Kiri/Atas) & Live Activity Log (Kanan/Bawah) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- 2. Interactive Task & Project Board (8 Kolom di Desktop) -->
+            <section class="lg:col-span-8 space-y-5">
+                
+                <!-- Form Tambah Task Baru -->
+                <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 sm:p-5 shadow-sm">
+                    <h2 class="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4 text-indigo-400"></i>
+                        Tambah Task / Signal Baru
+                    </h2>
+                    <form id="add-task-form" class="flex flex-col sm:flex-row gap-3">
+                        <input 
+                            type="text" 
+                            id="task-title-input" 
+                            placeholder="Contoh: Deploy webhook signal BTC atau Refactor UI landing page..." 
+                            required
+                            class="flex-1 rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                        >
+                        <div class="flex gap-2 sm:gap-3">
+                            <select 
+                                id="task-category-input"
+                                class="flex-1 sm:w-48 rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
+                            >
+                                <option value="Toko & Affiliate">Toko & Affiliate (Aktif)</option>
+                                <option value="Riset Produk">Riset Produk</option>
+                                <option value="Admin & Link">Admin & Link</option>
+                                <option value="Konten Kreator">Konten Kreator</option>
+                                <option value="Web Dev">Web Dev</option>
+                                <option value="Automation">Automation</option>
+                                <option value="Trading">Trading</option>
+                                <option value="Digital Product">Digital Product</option>
+                            </select>
+                            <button 
+                                type="submit" 
+                                class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-white text-slate-950 font-semibold text-sm transition-all shrink-0 flex items-center gap-1.5"
+                            >
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                <span>Tambah</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Filter Kategori -->
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div id="category-filters" class="flex flex-wrap gap-2" role="tablist" aria-label="Filter Kategori">
+                        <!-- Tombol filter di-render via JS -->
+                    </div>
+                    <span id="filter-count-label" class="text-xs text-slate-400">Menampilkan semua task</span>
+                </div>
+
+                <!-- Daftar Task -->
+                <div id="task-list" class="space-y-3">
+                    <!-- Item task di-render via JS -->
+                </div>
+
+            </section>
+
+            <!-- 3. Live Preview / Log Aktivitas Singkat (4 Kolom di Desktop) -->
+            <aside class="lg:col-span-4 rounded-2xl bg-slate-900/80 border border-slate-800 p-4 sm:p-5 flex flex-col max-h-[640px]">
+                <div class="flex items-center justify-between pb-3.5 border-b border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="terminal" class="w-4 h-4 text-cyan-400"></i>
+                        <h2 class="text-sm font-semibold text-white">Live Signal & Activity Log</h2>
+                    </div>
+                    <button onclick="clearLogs()" class="text-xs text-slate-400 hover:text-slate-200 transition-colors">
+                        Bersihkan
+                    </button>
+                </div>
+
+                <!-- Feed Log -->
+                <div id="activity-log" class="mt-4 space-y-3 overflow-y-auto pr-1 font-mono text-xs flex-1">
+                    <!-- Log entries di-render via JS -->
+                </div>
+
+                <!-- Footer Info Markdown -->
+                <div class="mt-4 pt-3.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                    <span>Auto-save aktif (LocalStorage)</span>
+                    <span class="text-indigo-400 font-medium">Siap ekspor .md</span>
+                </div>
+            </aside>
+
+        </div>
+    </main>
+
+    <!-- Hidden textarea untuk fallback clipboard yang andal di iFrame -->
+    <textarea id="clipboard-helper" class="sr-only" aria-hidden="true"></textarea>
+
+    <script>
+        // ==========================================
+        // 1. STATE & DATA INITIALIZATION
+        // ==========================================
+        const STORAGE_KEY_TASKS = 'ppst_tasks_v2';
+        const STORAGE_KEY_LOGS = 'ppst_logs_v2';
+
+        const CATEGORIES = [
+            'Semua',
+            'Toko & Affiliate',
+            'Riset Produk',
+            'Admin & Link',
+            'Konten Kreator',
+            'Web Dev',
+            'Automation',
+            'Trading',
+            'Digital Product'
+        ];
+        const STATUS_ORDER = ['To Do', 'In Progress', 'Done'];
+
+        const defaultTasks = [
+            {
+                id: 'tsk-toko-1',
+                title: 'Radar flash sale midnight: 4 gamis crinkle & 2 mukena travel mini (komisi ekstra 15%)',
+                category: 'Riset Produk',
+                status: 'In Progress',
+                updatedAt: 'Baru saja'
+            },
+            {
+                id: 'tsk-toko-2',
+                title: 'Sinkronisasi voucher diskon 25rb & optimasi 32 link etalase koleksi toko',
+                category: 'Admin & Link',
+                status: 'Done',
+                updatedAt: 'Hari ini'
+            },
+            {
+                id: 'tsk-toko-3',
+                title: 'Produksi 5 skrip racun Shopee Video & caption checkout keranjang kuning',
+                category: 'Konten Kreator',
+                status: 'In Progress',
+                updatedAt: 'Hari ini'
+            },
+            {
+                id: 'tsk-toko-4',
+                title: 'Monitoring klik harian (114 klik) & evaluasi konversi toko affiliate',
+                category: 'Toko & Affiliate',
+                status: 'In Progress',
+                updatedAt: 'Hari ini'
+            },
+            {
+                id: 'tsk-1',
+                title: 'Integrasi webhook TradingView ke bot notifikasi Telegram',
+                category: 'Automation',
+                status: 'To Do',
+                updatedAt: 'Hari ini'
+            },
+            {
+                id: 'tsk-2',
+                title: 'Slicing dashboard analitik & dark mode responsiveness',
+                category: 'Web Dev',
+                status: 'Done',
+                updatedAt: 'Kemarin'
+            },
+            {
+                id: 'tsk-3',
+                title: 'Backtest strategi breakout sesi London (XAUUSD & BTC)',
+                category: 'Trading',
+                status: 'To Do',
+                updatedAt: 'Hari ini'
+            },
+            {
+                id: 'tsk-4',
+                title: 'Finalisasi template Notion & landing page rilis produk digital',
+                category: 'Digital Product',
+                status: 'To Do',
+                updatedAt: 'Hari ini'
+            }
+        ];
+
+        const defaultLogs = [
+            {
+                id: 'log-1',
+                time: getCurrentTime(),
+                type: 'SYSTEM',
+                message: 'Workspace tracker aktif - Fokus peran: Toko & Affiliate.'
+            },
+            {
+                id: 'log-2',
+                time: getCurrentTime(),
+                type: 'ACTIVE',
+                message: 'Lou (Riset) & Youna (Konten) sedang menjalankan task sesi malam.'
+            },
+            {
+                id: 'log-3',
+                time: getCurrentTime(),
+                type: 'DONE',
+                message: 'Rouse (Admin) menyelesaikan sinkronisasi 32 link voucher diskon.'
+            }
+        ];
+
+        let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY_TASKS)) || [...defaultTasks];
+        let logs = JSON.parse(localStorage.getItem(STORAGE_KEY_LOGS)) || [...defaultLogs];
+        let activeFilter = 'Semua';
+        let automationModeIndex = 0;
+
+        const automationModes = [
+            { label: 'Online & Sinkron', dotClass: 'bg-cyan-400', pingClass: 'bg-cyan-400' },
+            { label: 'Webhook Standby', dotClass: 'bg-emerald-400', pingClass: 'bg-emerald-400' },
+            { label: 'Manual Override', dotClass: 'bg-amber-400', pingClass: 'bg-amber-400' }
+        ];
+
+        // ==========================================
+        // 2. HELPER FUNCTIONS
+        // ==========================================
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY_TASKS, JSON.stringify(tasks));
+            localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+        }
+
+        function addLog(type, message) {
+            logs.unshift({
+                id: 'log-' + Date.now(),
+                time: getCurrentTime(),
+                type,
+                message
+            });
+            if (logs.length > 30) logs.pop();
+            saveState();
+            renderLogs();
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                success: 'bg-emerald-950/95 border-emerald-500/40 text-emerald-200',
+                info: 'bg-slate-900/95 border-indigo-500/40 text-slate-100',
+                warning: 'bg-amber-950/95 border-amber-500/40 text-amber-200'
+            };
+
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md text-xs sm:text-sm font-medium transition-all duration-300 translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+            toast.innerHTML = `
+                <span class="w-2 h-2 rounded-full ${type === 'success' ? 'bg-emerald-400' : 'bg-indigo-400'}"></span>
+                <span>${escapeHtml(message)}</span>
+            `;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 2800);
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ==========================================
+        // 3. STYLING BADGES
+        // ==========================================
+        function getCategoryBadgeClass(category) {
+            switch (category) {
+                case 'Toko & Affiliate':
+                    return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                case 'Riset Produk':
+                    return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+                case 'Admin & Link':
+                    return 'bg-amber-500/10 text-amber-300 border-amber-500/20';
+                case 'Konten Kreator':
+                    return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+                case 'Web Dev':
+                    return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+                case 'Automation':
+                    return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+                case 'Trading':
+                    return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                case 'Digital Product':
+                    return 'bg-pink-500/10 text-pink-400 border-pink-500/20';
+                default:
+                    return 'bg-slate-800 text-slate-300 border-slate-700';
+            }
+        }
+
+        function getStatusConfig(status) {
+            switch (status) {
+                case 'To Do':
+                    return {
+                        badge: 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700',
+                        dot: 'bg-slate-400',
+                        cardBorder: 'border-slate-800/90'
+                    };
+                case 'In Progress':
+                    return {
+                        badge: 'bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/25',
+                        dot: 'bg-amber-400 animate-pulse',
+                        cardBorder: 'border-amber-500/25'
+                    };
+                case 'Done':
+                    return {
+                        badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25',
+                        dot: 'bg-emerald-400',
+                        cardBorder: 'border-emerald-500/20 opacity-85'
+                    };
+            }
+        }
+
+        // ==========================================
+        // 4. CORE ACTIONS (CRUD & TOGGLES)
+        // ==========================================
+        document.getElementById('add-task-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const titleInput = document.getElementById('task-title-input');
+            const categoryInput = document.getElementById('task-category-input');
+            const title = titleInput.value.trim();
+            const category = categoryInput.value;
+            if (!title) return;
+
+            const newTask = {
+                id: 'tsk-' + Date.now(),
+                title,
+                category,
+                status: 'To Do',
+                updatedAt: getCurrentTime()
+            };
+
+            tasks.unshift(newTask);
+            saveState();
+            
+            titleInput.value = '';
+            addLog('NEW', `[${category}] Menambahkan: "${title}"`);
+            showToast('Task baru berhasil ditambahkan', 'success');
+            renderAll();
+        });
+
+        function cycleTaskStatus(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+            const currentIndex = STATUS_ORDER.indexOf(task.status);
+            const nextStatus = STATUS_ORDER[(currentIndex + 1) % STATUS_ORDER.length];
+            const prevStatus = task.status;
+
+            task.status = nextStatus;
+            task.updatedAt = getCurrentTime();
+            saveState();
+            const logTag = nextStatus === 'Done' ? 'DONE' : (nextStatus === 'In Progress' ? 'ACTIVE' : 'RESET');
+            addLog(logTag, `"${task.title}" berubah: ${prevStatus} ➔ ${nextStatus}`);
+            renderAll();
+        }
+
+        function deleteTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+            tasks = tasks.filter(t => t.id !== id);
+            saveState();
+            addLog('DELETE', `Menghapus item: "${task.title}"`);
+            showToast('Task dihapus', 'warning');
+            renderAll();
+        }
+
+        function setFilter(category) {
+            activeFilter = category;
+            renderFilters();
+            renderTasks();
+        }
+
+        function toggleAutomationStatus() {
+            automationModeIndex = (automationModeIndex + 1) % automationModes.length;
+            const current = automationModes[automationModeIndex];
+            document.getElementById('automation-label').textContent = current.label;
+            document.getElementById('automation-dot').className = `relative inline-flex rounded-full h-2.5 w-2.5 ${current.dotClass}`;
+            document.getElementById('automation-ping').className = `animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${current.pingClass}`;
+            addLog('SIGNAL', `Mode otomasi diubah ke: ${current.label}`);
+        }
+
+        function clearLogs() {
+            logs = [{
+                id: 'log-' + Date.now(),
+                time: getCurrentTime(),
+                type: 'SYSTEM',
+                message: 'Riwayat log dibersihkan.'
+            }];
+            saveState();
+            renderLogs();
+        }
+
+        function resetDemoData() {
+            tasks = JSON.parse(JSON.stringify(defaultTasks));
+            logs = JSON.parse(JSON.stringify(defaultLogs));
+            activeFilter = 'Semua';
+            saveState();
+            addLog('SYSTEM', 'Data dikembalikan ke template awal.');
+            showToast('Data demo berhasil di-reset', 'info');
+            renderAll();
+        }
+
+        // ==========================================
+        // 5. EXPORT MARKDOWN TO CLIPBOARD
+        // ==========================================
+        function exportToMarkdown() {
+            const today = new Date().toLocaleDateString('id-ID', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+            const doneCount = tasks.filter(t => t.status === 'Done').length;
+            const activeCount = tasks.filter(t => t.status !== 'Done').length;
+            const progress = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
+
+            let md = `# 📊 Project Progress & Signal Report\n`;
+            md += `**Tanggal:** ${today}\n`;
+            md += `**Status Otomasi:** ${automationModes[automationModeIndex].label}\n`;
+            md += `**Ringkasan:** ${doneCount}/${tasks.length} Selesai (${progress}%) · ${activeCount} Aktif\n\n`;
+            
+            md += `## 📋 Daftar Task & Proyek\n`;
+            if (tasks.length === 0) {
+                md += `_Belum ada task terdaftar._\n`;
+            } else {
+                STATUS_ORDER.forEach(status => {
+                    const group = tasks.filter(t => t.status === status);
+                    if (group.length > 0) {
+                        md += `\n### ${status} (${group.length})\n`;
+                        group.forEach(t => {
+                            const checkbox = status === 'Done' ? '[x]' : '[ ]';
+                            md += `- ${checkbox} **[${t.category}]** ${t.title}\n`;
+                        });
+                    }
+                });
+            }
+
+            md += `\n## ⚡ Log Aktivitas Terbaru\n`;
+            logs.slice(0, 8).forEach(l => {
+                md += `- \`${l.time}\` **[${l.type}]** ${l.message}\n`;
+            });
+
+            const helper = document.getElementById('clipboard-helper');
+            helper.value = md;
+            helper.select();
+            helper.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                addLog('EXPORT', 'Ringkasan Markdown berhasil disalin ke clipboard.');
+                showToast('Ringkasan Markdown disalin ke clipboard!', 'success');
+            } catch (err) {
+                showToast('Gagal menyalin otomatis. Coba lagi.', 'warning');
+            }
+        }
+
+        // ==========================================
+        // 6. RENDERING UI
+        // ==========================================
+        function renderStats() {
+            const total = tasks.length;
+            const done = tasks.filter(t => t.status === 'Done').length;
+            const active = total - done;
+            const percentage = total === 0 ? 0 : Math.round((done / total) * 100);
+
+            document.getElementById('stat-active').textContent = active;
+            document.getElementById('stat-total-sub').textContent = `Dari total ${total} item terdaftar`;
+            document.getElementById('stat-done').textContent = done;
+            document.getElementById('stat-rate').textContent = `${percentage}%`;
+            document.getElementById('stat-progress-bar').style.width = `${percentage}%`;
+        }
+
+        function renderFilters() {
+            const container = document.getElementById('category-filters');
+            container.innerHTML = CATEGORIES.map(cat => {
+                const isActive = cat === activeFilter;
+                const count = cat === 'Semua' ? tasks.length : tasks.filter(t => t.category === cat).length;
+                return `
+                    <button
+                        onclick="setFilter('${cat}')"
+                        class="px-3.5 py-2 rounded-xl text-xs font-medium transition-all flex items-center gap-2 border ${
+                            isActive
+                                ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20'
+                                : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
+                        }"
+                    >
+                        <span>${cat}</span>
+                        <span class="px-1.5 py-0.5 rounded-md text-[10px] ${isActive ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-slate-400'}">
+                            ${count}
+                        </span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('task-list');
+            const filtered = activeFilter === 'Semua'
+                ? tasks
+                : tasks.filter(t => t.category === activeFilter);
+
+            document.getElementById('filter-count-label').textContent =
+                `Menampilkan ${filtered.length} task${activeFilter !== 'Semua' ? ' di ' + activeFilter : ''}`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center">
+                        <div class="w-11 h-11 rounded-full bg-slate-800/80 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="inbox" class="w-5 h-5"></i>
+                        </div>
+                        <p class="text-sm font-medium text-slate-300">Belum ada task di kategori ini</p>
+                        <p class="text-xs text-slate-500 mt-1">Tambahkan task baru di atas atau ganti filter kategori.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = filtered.map(task => {
+                const statusStyle = getStatusConfig(task.status);
+                const catStyle = getCategoryBadgeClass(task.category);
+                const isDone = task.status === 'Done';
+
+                return `
+                    <div class="group rounded-2xl bg-slate-900/75 hover:bg-slate-900 border ${statusStyle.cardBorder} p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                        <div class="space-y-1.5 min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-medium border ${catStyle}">
+                                    ${escapeHtml(task.category)}
+                                </span>
+                                <span class="text-[11px] text-slate-500 font-mono">
+                                    ${escapeHtml(task.updatedAt)}
+                                </span>
+                            </div>
+                            <p class="text-sm sm:text-[15px] font-medium leading-snug break-words ${isDone ? 'line-through text-slate-500' : 'text-slate-100'}">
+                                ${escapeHtml(task.title)}
+                            </p>
+                        </div>
+
+                        <div class="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/70 shrink-0">
+                            <!-- Tombol Toggle Status -->
+                            <button 
+                                onclick="cycleTaskStatus('${task.id}')"
+                                title="Klik untuk ganti status (To Do ➔ In Progress ➔ Done)"
+                                class="px-3 py-2 rounded-xl border text-xs font-medium flex items-center gap-2 transition-all active:scale-95 cursor-pointer ${statusStyle.badge}"
+                            >
+                                <span class="w-2 h-2 rounded-full ${statusStyle.dot}"></span>
+                                <span>${task.status}</span>
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5 opacity-60"></i>
+                            </button>
+                            <!-- Tombol Hapus -->
+                            <button
+                                onclick="deleteTask('${task.id}')"
+                                title="Hapus task"
+                                class="p-2.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                            >
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('activity-log');
+            const typeColors = {
+                DONE: 'text-emerald-400',
+                ACTIVE: 'text-amber-400',
+                NEW: 'text-indigo-400',
+                DELETE: 'text-rose-400',
+                EXPORT: 'text-cyan-400',
+                SIGNAL: 'text-purple-400',
+                SYSTEM: 'text-slate-400',
+                RESET: 'text-slate-300'
+            };
+            if (!container) return;
+            if (logs.length === 0) {
+                container.innerHTML = `<p class="text-slate-500 text-xs">Belum ada aktivitas.</p>`;
+                return;
+            }
+            container.innerHTML = logs.map(log => `
+                <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/70 leading-relaxed">
+                    <div class="flex items-center justify-between text-[10px] text-slate-500 mb-1">
+                        <span class="font-semibold ${typeColors[log.type] || 'text-slate-400'}">[${log.type}]</span>
+                        <span>${log.time}</span>
+                    </div>
+                    <p class="text-slate-300 break-words">${escapeHtml(log.message)}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderAll() {
+            renderStats();
+            renderFilters();
+            renderTasks();
+            renderLogs();
+        }
+
+        // Inisialisasi saat halaman dimuat
+        window.addEventListener('DOMContentLoaded', () => {
+            renderAll();
+        });
+    </script>
+</body>
+</html>
