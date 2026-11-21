@@ -18,7 +18,7 @@ Kalau pengguna bilang "terserah", pakai preset di bawah dan lanjut.
 
 ## 1. Siapkan proyek
 ```bash
-git clone https://github.com/malikisaputra-source/kantor-ai-template.git kantor-ai
+git clone https://github.com/ejak12/kantor-ai-template.git kantor-ai
 cd kantor-ai && npm install
 ```
 Butuh Node.js 18+. Kalau `npm` belum ada, minta pengguna pasang Node.js dulu dari nodejs.org.
@@ -35,13 +35,13 @@ Tiga peran dasar, satu per ruangan:
 Preset `AGEN` (tengah tiap ruangan, aman tidak bertumpuk):
 ```ts
 export const AGEN: Agen[] = [
-  { key: 'riset', nama: 'Rani', tugas: 'Cari peluang', ruang: 'bizdev', warna: '#e4572e', x: -4.4, z: -0.2 },
-  { key: 'admin', nama: 'Dimas', tugas: 'Email & dokumen', ruang: 'keuangan', warna: '#f2b134', x: 0.1, z: -0.2 },
-  { key: 'konten', nama: 'Laras', tugas: 'Ide & desain', ruang: 'studio', warna: '#3a86ff', x: 4.5, z: -0.2 },
+  { key: 'riset', nama: 'Lou', tugas: 'Cari peluang', ruang: 'bizdev', warna: '#e4572e', x: -4.4, z: -0.2 },
+  { key: 'admin', nama: 'Rousi', tugas: 'Email & dokumen', ruang: 'keuangan', warna: '#f2b134', x: 0.1, z: -0.2 },
+  { key: 'konten', nama: 'Youna', tugas: 'Ide & desain', ruang: 'studio', warna: '#3a86ff', x: 4.5, z: -0.2 },
 ];
 ```
 - Ganti `label` di `RUANGAN` jadi Riset / Admin / Konten (key-nya biarkan).
-- `JADWAL`: ganti key agen lama (`raka`, `sekar`, `gilang`, `riska`) dengan `riset`, `admin`, `konten`. Hapus baris yang agennya sudah tidak ada. Baris `agen: '*'` biarkan.
+- `JADWAL`: ganti key agen lama (`Rouga`, `Heura`, `Douma`) dengan `riset`, `admin`, `konten`. Hapus baris yang agennya sudah tidak ada. Baris `agen: '*'` biarkan.
 - `src/laporan.json`: kosongkan isinya, lalu buat tepat 3 kunci `riset`, `admin`, `konten` dengan `ringkasan`, `menunggu`, `mendesak`, dan `angka` yang sesuai bidang usaha pengguna.
 - `KANTOR.nama` dan `KANTOR.subjudul` diisi nama bisnis pengguna. `GAYA` diisi pilihan gaya.
 

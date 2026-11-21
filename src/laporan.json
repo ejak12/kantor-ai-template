@@ -1,58 +1,52 @@
 {
-  "raka": {
-    "ringkasan": "Enam paket tender baru; dua cocok, satu Rakor Dinas Contoh sedang dikejar.",
+  "riset": {
+    "ringkasan": "3 gamis silk kondangan (komisi ekstra 12%) & mukena travel mini viral siap dipromosikan.",
     "menunggu": [
-      "Setujui batch email B012 (30 kontak)"
+      "Pilih 1 dari 2 supplier mukena travel mini untuk difokuskan di Shopee Video"
     ],
-    "angka": [
-      {
-        "label": "Paket baru",
-        "nilai": "6 paket"
-      }
-    ]
-  },
-  "sekar": {
-    "ringkasan": "Tiga kampus contoh membalas penawaran; satu minta sampel.",
-    "menunggu": [
-      "Kirim sampel ke Kampus Contoh?"
-    ],
-    "angka": [
-      {
-        "label": "Calon klien",
-        "nilai": "12 kontak"
-      }
-    ]
-  },
-  "gilang": {
-    "ringkasan": "Brief video Festival Contoh masuk; storyboard awal disiapkan.",
     "mendesak": [
-      "Tenggat penawaran Festival Contoh besok 10.00"
-    ]
-  },
-  "riska": {
-    "ringkasan": "212 email dirapikan; dua email phishing ditandai.",
-    "menunggu": [
-      "Periksa draf invoice termin 2"
+      "Flash sale gamis sage green berakhir pukul 21.00 nanti malam"
     ],
     "angka": [
       {
-        "label": "Email dilabel",
-        "nilai": "212 email"
+        "label": "Produk terkurasi",
+        "nilai": "14 item"
+      },
+      {
+        "label": "Komisi tertinggi",
+        "nilai": "15%"
       }
     ]
   },
-  "esok": {
-    "ringkasan": "Tiga alternatif konsep Rakor Dinas Contoh selesai.",
+  "admin": {
+    "ringkasan": "Etalase Shopee Koleksiku dirapikan (24 link aktif), 82 klik affiliate tercatat hari ini.",
     "menunggu": [
-      "Pilih konsep Rakor Dinas Contoh"
-    ]
-  },
-  "lita": {
-    "ringkasan": "Deck 14 slide Festival Contoh siap ditinjau.",
+      "Konfirmasi nomor urut etalase untuk 3 gamis baru"
+    ],
     "angka": [
       {
-        "label": "Desain selesai",
-        "nilai": "4 berkas"
+        "label": "Klik link",
+        "nilai": "82 klik"
+      },
+      {
+        "label": "Checkout produk",
+        "nilai": "19 pesanan"
+      }
+    ]
+  },
+  "konten": {
+    "ringkasan": "3 skrip racun Shopee Video selesai: 'Mukena Seukuran Dompet' dan 'Gamis Mewah di Bawah 150rb'.",
+    "menunggu": [
+      "Tinjau skrip Shopee Video no. 03 (Tutorial 3 Style Hijab Segiempat Paris)"
+    ],
+    "angka": [
+      {
+        "label": "Naskah video",
+        "nilai": "3 skrip"
+      },
+      {
+        "label": "Caption racun",
+        "nilai": "5 variasi"
       }
     ]
   }
